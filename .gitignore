@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+apps/**/node_modules/
+apps/**/dist/
+apps/**/build/
+
+# Database
+apps/backend/.sqlite_db
+.sqlite_db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build directories
+dist/
+build/
+out/
+
+# Dependency directories
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Editors and IDEs
+.vscode/
+.idea/
+
+# MacOS files
+.DS_Store
+
+# Turborepo cache
+.turbo/
