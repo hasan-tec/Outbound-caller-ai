@@ -31,6 +31,7 @@
     "@nestjs/websockets": "^10.4.5",
     "better-sqlite3": "^11.5.0",
     "class-validator": "^0.14.1",
+    "googleapis": "^144.0.0",
     "kysely": "^0.27.4",
     "nestjs-kysely": "^1.0.0",
     "reflect-metadata": "^0.2.0",

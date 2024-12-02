@@ -59,7 +59,7 @@ export class CallLogService extends BaseCrudService<CallLog> {
     return this.create(callData);
   }
 
-  async makeOutboundCall(toPhoneNumber: string): Promise<any> {
+  async makeOutboundCall(toPhoneNumber: string, name: string): Promise<any> {
     const twilioPhoneNumber = await this.systemConfigService.getConfigByKey(
       'twilio_phone_number',
     );
@@ -98,8 +98,6 @@ export class CallLogService extends BaseCrudService<CallLog> {
     const wsUrl = serverUrl.replace('http', 'ws');
     const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
                           <Response>
-                              <Say>Hello! This is a test call from Twilio.</Say>
-                              <Pause length="1"/>
                               <Connect>
                                   <Stream url="${wsUrl}/media-stream" />
                               </Connect>

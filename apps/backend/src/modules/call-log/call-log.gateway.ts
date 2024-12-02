@@ -69,7 +69,7 @@ export class CallLogGateway
     });
   }
 
-  private setupOpenAiWebSocket(client: WebSocket): void {
+  private async setupOpenAiWebSocket(client: WebSocket): Promise<void> {
     this.openAiWs.on('open', async () => {
       console.log('Connected to the OpenAI Realtime API');
       const callLog = await this.callLogService.findAll({
@@ -81,11 +81,12 @@ export class CallLogGateway
       if (!agentPrompt) throw new Error('Agent not found');
       
       await new Promise(resolve => setTimeout(resolve, 250));
-      this.sendSessionUpdate(agentPrompt.prompt);
+      this.sendSessionUpdate(agentPrompt.prompt, callLog[0].name); // Pass the name to sendSessionUpdate
       this.callLogService.update(callLog[0].id, {
         status: 'called',
       });
     });
+
 
     this.openAiWs.on('message', (data: WebSocket.Data) => {
       this.handleOpenAiMessage(client, data);
@@ -100,7 +101,7 @@ export class CallLogGateway
     });
   }
 
-  private sendSessionUpdate(systemMessage: string): void {
+  private sendSessionUpdate(systemMessage: string, personName: string): void {
     const sessionUpdate = {
       type: 'session.update',
       session: {
@@ -108,7 +109,7 @@ export class CallLogGateway
         input_audio_format: 'g711_ulaw',
         output_audio_format: 'g711_ulaw',
         voice: VOICE,
-        instructions: systemMessage,
+        instructions: `${systemMessage}\nYou are calling ${personName}. Start the conversation by asking if ${personName} is available.`,
         modalities: ['text', 'audio'],
         temperature: 0.8,
       },

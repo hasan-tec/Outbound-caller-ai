@@ -14,6 +14,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .createTable('call_log') 
     .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
     .addColumn('number', 'varchar(255)', (col) => col.notNull())
+    .addColumn('name', 'varchar(255)', (col) => col.notNull()) // Add name column
     .addColumn('status', 'varchar(255)', (col) => 
       col.notNull().defaultTo('pending'))
     .addColumn('duration', 'varchar(255)')
@@ -43,3 +44,4 @@ export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable('agent').execute();
   await db.schema.dropTable('system_config').execute();
 }
+

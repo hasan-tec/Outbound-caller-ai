@@ -6,10 +6,10 @@ import {
   Updateable
 } from 'kysely'
 
-// New UserTable interface
 export interface CallLogTable {
   id: Generated<number>
   number: string
+  name: string // Add name field
   status: ColumnType<string, string | undefined, 'pending'>
   duration: string | null
   agent: number

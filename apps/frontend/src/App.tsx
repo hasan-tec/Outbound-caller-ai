@@ -52,6 +52,7 @@ export default function RealtimeConsole() {
     const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [promptValue, setPromptValue] = useState('');
+    
 
     const {
         data: callLogsResponse,
@@ -93,9 +94,10 @@ export default function RealtimeConsole() {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
         const number = formData.get('number') as string;
+        const name = formData.get('name') as string; // Get the name from the form
         const agent = formData.get('agent-select') as string;
-        createCallLog({ number, agent });
-    };
+        createCallLog({ number, name, agent }); // Include name in the call log creation
+      };
 
     const {
         mutate: createAgent,
@@ -432,24 +434,35 @@ export default function RealtimeConsole() {
 
                     <div className="w-80">
                         <Card className="p-4 my-2 mr-2">
-                            <h3 className="text-lg font-medium text-gray-700">
-                                Add Call
-                            </h3>
-                            <form
-                                onSubmit={handleSubmitCall}
-                                className="space-y-4"
-                            >
-                                <div className="">
-                                    <Label className="text-xs" htmlFor="number">
-                                        Phone Number
-                                    </Label>
-                                    <Input
-                                        name="number"
-                                        id="number"
-                                        placeholder="+1(000)000-0000"
-                                        required
-                                    />
-                                </div>
+                        <h3 className="text-lg font-medium text-gray-700">
+                            Add Call
+                        </h3>
+                        <form
+                            onSubmit={handleSubmitCall}
+                            className="space-y-4"
+                        >
+                            <div className="">
+                            <Label className="text-xs" htmlFor="name">
+                                Name
+                            </Label>
+                            <Input
+                                name="name"
+                                id="name"
+                                placeholder="Enter name"
+                                required
+                            />
+                            </div>
+                            <div className="">
+                            <Label className="text-xs" htmlFor="number">
+                                Phone Number
+                            </Label>
+                            <Input
+                                name="number"
+                                id="number"
+                                placeholder="+1(000)000-0000"
+                                required
+                            />
+                            </div>
                                 <div className="">
                                     <Label
                                         className="text-xs"

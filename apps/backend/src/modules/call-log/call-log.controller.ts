@@ -17,9 +17,10 @@ export class CallLogController extends BaseCrudController<CallLog> {
   @Post('make-outbound-call/:id')
   async makeOutboundCall(@Param('id') id: number) {
     const callLog = await this.callLogService.findOne(id);
-    const callRes = await this.callLogService.makeOutboundCall(callLog.number);
+    const callRes = await this.callLogService.makeOutboundCall(callLog.number, callLog.name);
     await this.callLogService.update(id, { call_sid: callRes.sid });
 
     return { data: callRes.sid };
   }
 }
+
