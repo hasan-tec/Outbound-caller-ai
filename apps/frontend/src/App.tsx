@@ -1,6 +1,7 @@
 import { Button } from '@/components/elements/button';
 import { Input } from '@/components/elements/input';
 import { Label } from '@/components/elements/label';
+import CsvImport from './components/CsvImport';
 import {
     Select,
     SelectContent,
@@ -58,13 +59,16 @@ export default function RealtimeConsole() {
         data: callLogsResponse,
         isLoading: callLogsIsLoading,
         error: callLogsError,
-    } = useFindAllFromModule('call-log', {
+        refetch: refetchCallLogs
+      } = useFindAllFromModule('call-log', {
         orderBy: { column: 'created_at', order: 'desc' },
-    });
-    const callLogs = callLogsResponse?.data.data || [];
+      });
+      const callLogs = callLogsResponse?.data.data || [];
+    
+      const { data: agentsResponse } = useFindAllFromModule('agent', {});
+      const agents = agentsResponse?.data.data || [];
 
-    const { data: agentsResponse } = useFindAllFromModule('agent', {});
-    const agents = agentsResponse?.data.data || [];
+  
 
     const { data: systemConfigResponse, isLoading: systemConfigIsLoading } =
         useFindAllFromModule('system-config', {});
@@ -498,6 +502,7 @@ export default function RealtimeConsole() {
                             </form>
                         </Card>
 
+
                         <Card className="p-4 my-2 mr-2">
                             <h3 className="text-lg font-medium text-gray-700">
                                 Agent Prompt
@@ -593,6 +598,19 @@ export default function RealtimeConsole() {
                                         : 'Save'}
                                 </Button>
                             </form>
+                        </Card>
+
+                        <Card className="p-4 my-2 mr-2">
+                            <h3 className="text-lg font-medium text-gray-700 mb-4">
+                                Import CSV
+                            </h3>
+                            <CsvImport 
+                                agents={agents.map((agent) => ({ id: agent.id, name: agent.name }))} 
+                                onImportSuccess={() => {
+                                    refetchCallLogs();
+                                    alert('CSV imported successfully!');
+                                }} 
+                            />
                         </Card>
                     </div>
                 </div>

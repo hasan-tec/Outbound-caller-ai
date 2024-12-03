@@ -6,6 +6,7 @@ import twilio from 'twilio';
 import { BaseCrudService } from '../../common/services/base-crud.service';
 import { SystemConfigService } from '../system-config/system-config.service';
 
+
 @Injectable()
 export class CallLogService extends BaseCrudService<CallLog> {
   private twilioClient: twilio.Twilio;
@@ -16,6 +17,14 @@ export class CallLogService extends BaseCrudService<CallLog> {
   ) {
     super(db, 'call_log');
   }
+
+  async createMany(callLogs: Partial<CallLog>[]): Promise<CallLog[]> {
+    return this.db.insertInto('call_log')
+      .values(callLogs)
+      .returningAll()
+      .execute();
+  }
+
 
   private async initializeTwilioClient() {
     /**
