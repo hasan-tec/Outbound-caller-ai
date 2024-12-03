@@ -29,8 +29,10 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
 
     setIsLoading(true);
     setError(null);
+
     const formData = new FormData();
     formData.append('file', file);
+    // Match exactly how the Add Call form sends the agent ID
     formData.append('agentId', selectedAgent);
 
     try {
@@ -52,17 +54,28 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="csv-file">CSV File</Label>
-        <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} />
+        <Input 
+          id="csv-file" 
+          type="file" 
+          accept=".csv" 
+          onChange={handleFileChange}
+          required
+        />
       </div>
       <div>
         <Label htmlFor="agent-select">Select Agent</Label>
-        <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+        <Select 
+          value={selectedAgent} 
+          onValueChange={setSelectedAgent}
+          name="agent-select"
+          required
+        >
           <SelectTrigger id="agent-select">
             <SelectValue placeholder="Select an agent" />
           </SelectTrigger>
           <SelectContent>
             {agents.map((agent) => (
-              <SelectItem key={agent.id} value={`${agent.id}`}>
+              <SelectItem key={agent.id} value={String(agent.id)}>
                 {agent.name}
               </SelectItem>
             ))}
@@ -72,7 +85,11 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
       {error && (
         <div className="text-red-500 font-medium">{error}</div>
       )}
-      <Button type="submit" disabled={!file || !selectedAgent || isLoading}>
+      <Button 
+        type="submit" 
+        disabled={!file || !selectedAgent || isLoading}
+        className="w-full"
+      >
         {isLoading ? 'Importing...' : 'Import CSV'}
       </Button>
     </form>
@@ -80,3 +97,4 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
 };
 
 export default CsvImport;
+

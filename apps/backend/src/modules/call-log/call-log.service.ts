@@ -26,6 +26,8 @@ export class CallLogService extends BaseCrudService<CallLog> {
   }
 
 
+
+
   private async initializeTwilioClient() {
     /**
      * Keep it runable even if the credentials are not correct
@@ -68,6 +70,25 @@ export class CallLogService extends BaseCrudService<CallLog> {
     return this.create(callData);
   }
 
+  async handleOutboundCallWebhook(reply: any) {
+    const serverUrl =
+      await this.systemConfigService.getConfigByKey('server_url');
+
+    if (!serverUrl) {
+      throw new Error('Missing server URL');
+    }
+
+    const wsUrl = serverUrl.replace('http', 'ws');
+    const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+                        <Response>
+                            <Connect>
+                                <Stream url="${wsUrl}/media-stream" />
+                            </Connect>
+                        </Response>`;
+
+    reply.type('text/xml').send(twimlResponse);
+  }
+
   async makeOutboundCall(toPhoneNumber: string, name: string): Promise<any> {
     const twilioPhoneNumber = await this.systemConfigService.getConfigByKey(
       'twilio_phone_number',
@@ -96,22 +117,12 @@ export class CallLogService extends BaseCrudService<CallLog> {
     }
   }
 
-  async handleOutboundCallWebhook(reply: any) {
-    const serverUrl =
-      await this.systemConfigService.getConfigByKey('server_url');
-
-    if (!serverUrl) {
-      throw new Error('Missing server URL');
-    }
-
-    const wsUrl = serverUrl.replace('http', 'ws');
-    const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
-                          <Response>
-                              <Connect>
-                                  <Stream url="${wsUrl}/media-stream" />
-                              </Connect>
-                          </Response>`;
-
-    reply.type('text/xml').send(twimlResponse);
+  async updateCallRecord(callSid: string, data: Partial<CallLog>): Promise<CallLog | null> {
+    return this.db
+      .updateTable('call_log')
+      .set(data as any) 
+      .where('call_sid', '=', callSid)
+      .returningAll()
+      .executeTakeFirst();
   }
 }

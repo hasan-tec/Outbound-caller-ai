@@ -3,7 +3,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 import { CallLogService } from './call-log.service';
 import { CallLog } from '@/type/database';
-import { Express } from 'express';
 import { Multer } from 'multer';
 
 interface UploadedFile extends Multer.File {
@@ -31,19 +30,24 @@ export class CallLogController extends BaseCrudController<CallLog> {
   }
 
   @Post('import-csv')
-  @UseInterceptors(FileInterceptor('file'))
-  async importCsv(@UploadedFile() file: UploadedFile, @Body('agentId') agentId: string) {
-    const csvData = file.buffer.toString();
-    const rows = csvData.split('\n').slice(1); // Skip header row
-    const callLogs = rows.map(row => {
-      const [name, number] = row.split(',');
-      return {
-        name: name.trim(),
-        number: number.trim(),
-        agent: parseInt(agentId),
-        status: 'pending'
-      };
-    });
-    return this.callLogService.createMany(callLogs);
+@UseInterceptors(FileInterceptor('file'))
+async importCsv(@UploadedFile() file: UploadedFile, @Body('agentId') agentId: string): Promise<CallLog[]> {
+  const csvData = file.buffer.toString();
+  const rows = csvData.split('\n').slice(1); // Skip header row
+  const callLogs = rows.filter(row => row.trim()).map(row => {
+    const [name, number] = row.split(',');
+    return {
+      name: name.trim(),
+      number: this.formatPhoneNumber(number.trim()),
+      agent: parseInt(agentId), // Convert agentId to a number
+      status: 'pending'
+    };
+  });
+  return this.callLogService.createMany(callLogs);
+}
+
+  private formatPhoneNumber(number: string): string {
+    const digitsOnly = number.replace(/\D/g, '');
+    return digitsOnly.startsWith('+') ? digitsOnly : `+${digitsOnly}`;
   }
 }

@@ -138,6 +138,7 @@ export default function RealtimeConsole() {
     };
 
     const columnHelper = createColumnHelper<(typeof callLogs)[0]>();
+    
 
     const columns = [
         columnHelper.accessor('call', {
@@ -169,7 +170,13 @@ export default function RealtimeConsole() {
                             (agent) => `${agent.id}` === info.getValue()
                         )?.name;
                     }
-
+                    if (key === 'records') {
+                        return (
+                            <div className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                                {info.getValue() as string}
+                            </div>
+                        );
+                    }
                     return info.getValue();
                 },
             })

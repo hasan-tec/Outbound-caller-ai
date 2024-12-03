@@ -12,7 +12,6 @@ import { AgentService } from '../agent/agent.service';
 import { SystemConfigService } from '../system-config/system-config.service';
 
 const VOICE = 'alloy';
-// List of Event Types to log to the console. See OpenAI Realtime API Documentation. (session.updated is handled separately.)
 const LOG_EVENT_TYPES = [
   'response.content.done',
   'rate_limits.updated',
@@ -42,6 +41,9 @@ export class CallLogGateway
   private openAiWs: WebSocket;
   private streamSid: string | null = null;
   private callSid: string | null = null;
+  private callRecords: string[] = [];
+
+
 
   afterInit() {
     console.log('WebSocket server initialized');
@@ -131,6 +133,10 @@ export class CallLogGateway
         console.log('Session updated successfully:', response);
       }
 
+      if (response.type === 'response.content.delta' && response.delta) {
+        this.callRecords.push(response.delta);
+      }
+
       if (response.type === 'response.audio.delta' && response.delta) {
         const audioDelta = {
           event: 'media',
@@ -141,6 +147,10 @@ export class CallLogGateway
         };
         client.send(JSON.stringify(audioDelta));
       }
+
+      if (response.type === 'response.done') {
+        this.updateCallLogWithRecords();
+      }
     } catch (error) {
       console.error(
         'Error processing OpenAI message:',
@@ -150,6 +160,25 @@ export class CallLogGateway
       );
     }
   }
+
+  private async updateCallLogWithRecords(): Promise<void> {
+    if (this.callSid) {
+      const records = this.callRecords.join('');
+      console.log(`Updating call log for callSid: ${this.callSid}`);
+      console.log(`Records to be saved: ${records}`);
+      try {
+        const updatedRecord = await this.callLogService.updateCallRecord(this.callSid, { records });
+        console.log(`Call log updated successfully: ${JSON.stringify(updatedRecord)}`);
+      } catch (error) {
+        console.error(`Error updating call log: ${error.message}`);
+      }
+      this.callRecords = []; // Reset records for the next interaction
+    } else {
+      console.warn('Attempted to update call log but callSid is null');
+    }
+  }
+
+
 
   private async handleMessage(
     client: WebSocket,
