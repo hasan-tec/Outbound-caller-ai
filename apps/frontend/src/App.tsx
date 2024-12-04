@@ -161,26 +161,46 @@ export default function RealtimeConsole() {
                 </Button>
             ),
         }),
-        ...Object.keys(callLogs[0] || {}).map((key) =>
-            columnHelper.accessor(key as keyof (typeof callLogs)[0], {
-                header: key.charAt(0).toUpperCase() + key.slice(1),
-                cell: (info) => {
-                    if (key === 'agent') {
-                        return agents.find(
-                            (agent) => `${agent.id}` === info.getValue()
-                        )?.name;
-                    }
-                    if (key === 'records') {
-                        return (
-                            <div className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
-                                {info.getValue() as string}
-                            </div>
-                        );
-                    }
-                    return info.getValue();
-                },
-            })
-        ),
+        columnHelper.accessor('id', {
+            header: 'Id'
+        }),
+        columnHelper.accessor('number', {
+            header: 'Number'
+        }),
+        columnHelper.accessor('name', {
+            header: 'Name'
+        }),
+        columnHelper.accessor('status', {
+            header: 'Status'
+        }),
+        columnHelper.accessor('duration', {
+            header: 'Duration'
+        }),
+        columnHelper.accessor('agent', {
+            header: 'Agent',
+            cell: (info) => {
+                const agentId = info.getValue();
+                const agent = agents.find(a => a.id === parseInt(String(agentId)));
+                return agent ? agent.name : '';
+            }
+        }),
+        columnHelper.accessor('records', {
+            header: 'Records',
+            cell: (info) => (
+                <div className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                    {info.getValue() as string}
+                </div>
+            )
+        }),
+        columnHelper.accessor('created_at', {
+            header: 'Created_at'
+        }),
+        columnHelper.accessor('updated_at', {
+            header: 'Updated_at'
+        }),
+        columnHelper.accessor('call_sid', {
+            header: 'Call_sid'
+        })
     ];
 
     const table = useReactTable({

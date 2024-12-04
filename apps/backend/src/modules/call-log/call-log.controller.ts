@@ -30,21 +30,21 @@ export class CallLogController extends BaseCrudController<CallLog> {
   }
 
   @Post('import-csv')
-@UseInterceptors(FileInterceptor('file'))
-async importCsv(@UploadedFile() file: UploadedFile, @Body('agentId') agentId: string): Promise<CallLog[]> {
-  const csvData = file.buffer.toString();
-  const rows = csvData.split('\n').slice(1); // Skip header row
-  const callLogs = rows.filter(row => row.trim()).map(row => {
-    const [name, number] = row.split(',');
-    return {
-      name: name.trim(),
-      number: this.formatPhoneNumber(number.trim()),
-      agent: parseInt(agentId), // Convert agentId to a number
-      status: 'pending'
-    };
-  });
-  return this.callLogService.createMany(callLogs);
-}
+  @UseInterceptors(FileInterceptor('file'))
+  async importCsv(@UploadedFile() file: UploadedFile, @Body('agentId') agentId: string): Promise<CallLog[]> {
+    const csvData = file.buffer.toString();
+    const rows = csvData.split('\n').slice(1); // Skip header row
+    const callLogs = rows.filter(row => row.trim()).map(row => {
+      const [name, number] = row.split(',');
+      return {
+        name: name.trim(),
+        number: this.formatPhoneNumber(number.trim()),
+        agent: parseInt(agentId), // Ensure integer conversion
+        status: 'pending'
+      };
+    });
+    return this.callLogService.createMany(callLogs);
+  }
 
   private formatPhoneNumber(number: string): string {
     const digitsOnly = number.replace(/\D/g, '');

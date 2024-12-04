@@ -18,7 +18,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('status', 'varchar(255)', (col) => 
       col.notNull().defaultTo('pending'))
     .addColumn('duration', 'varchar(255)')
-    .addColumn('agent', 'varchar(255)', (col) => col.notNull())
+    .addColumn('agent', 'integer', (col) => col.notNull()) // Explicitly define as integer
     .addColumn('records', 'text')
     .addColumn('created_at', 'timestamptz', (col) =>
       col.defaultTo(sql`CURRENT_TIMESTAMP`))

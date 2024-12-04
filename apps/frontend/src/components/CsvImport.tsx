@@ -4,6 +4,7 @@ import { Input } from '@/components/elements/input';
 import { Label } from '@/components/elements/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/elements/select';
 import axios from 'axios';
+import { Loader2 } from 'lucide-react'; // Import loading spinner icon
 
 interface CsvImportProps {
   agents: { id: number; name: string }[];
@@ -32,7 +33,6 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
 
     const formData = new FormData();
     formData.append('file', file);
-    // Match exactly how the Add Call form sends the agent ID
     formData.append('agentId', selectedAgent);
 
     try {
@@ -59,6 +59,7 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
           type="file" 
           accept=".csv" 
           onChange={handleFileChange}
+          disabled={isLoading}
           required
         />
       </div>
@@ -68,6 +69,7 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
           value={selectedAgent} 
           onValueChange={setSelectedAgent}
           name="agent-select"
+          disabled={isLoading}
           required
         >
           <SelectTrigger id="agent-select">
@@ -83,18 +85,24 @@ const CsvImport: React.FC<CsvImportProps> = ({ agents, onImportSuccess }) => {
         </Select>
       </div>
       {error && (
-        <div className="text-red-500 font-medium">{error}</div>
+        <div className="text-red-500 text-sm font-medium">{error}</div>
       )}
       <Button 
         type="submit" 
         disabled={!file || !selectedAgent || isLoading}
         className="w-full"
       >
-        {isLoading ? 'Importing...' : 'Import CSV'}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Importing...
+          </>
+        ) : (
+          'Import CSV'
+        )}
       </Button>
     </form>
   );
 };
 
 export default CsvImport;
-
