@@ -29,6 +29,7 @@
     "@nestjs/platform-ws": "^10.4.5",
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/websockets": "^10.4.5",
+    "@types/ws": "^8.5.13",
     "better-sqlite3": "^11.5.0",
     "class-validator": "^0.14.1",
     "googleapis": "^144.0.0",
@@ -36,7 +37,8 @@
     "nestjs-kysely": "^1.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "twilio": "^5.3.4"
+    "twilio": "^5.3.4",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

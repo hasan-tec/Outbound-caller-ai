@@ -28,6 +28,25 @@ import {
 import { useMakeOutboundCall } from './services/call-log';
 import Modal from './components/fragments/modal';
 
+import { useBatchOutboundCall } from './services/call-log';
+import { Alert, AlertTitle, AlertDescription } from '@/components/elements/alert';
+import { Loader2 } from 'lucide-react';
+import { ApiError } from '@/types/error';
+
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    if ((error as ApiError)?.message) return (error as ApiError).message;
+    return 'An unknown error occurred';
+}
+
+
+
+
+
+
+
 const AgentPromptTextarea = ({ defaultPrompt, value, onChange }: { 
     defaultPrompt: string,
     value: string,
@@ -53,6 +72,9 @@ export default function RealtimeConsole() {
     const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [promptValue, setPromptValue] = useState('');
+
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const { processCallQueue, progress } = useBatchOutboundCall('call-log');
     
 
     const {
@@ -455,11 +477,104 @@ export default function RealtimeConsole() {
                                 </div>
                             </div>
                         ) : (
-                            <DataGrid
-                                table={table}
-                                freezeColumns={1}
-                                onCellEdit={() => {}}
-                            />
+                            <div className="flex-1 max-w-[100vw-320px] overflow-x-scroll">
+                       
+
+                                {/* Batch Calling Controls */}
+                                <div className="p-4 space-y-4">
+                                    <div className="flex gap-2">
+                                        <Button
+                                            onClick={() => {
+                                                const pendingCallsList = callLogs
+                                                    .filter(log => log.status === 'pending')
+                                                    .map(log => log.id);
+                                                if (pendingCallsList.length === 0) {
+                                                    alert('No pending calls found');
+                                                    return;
+                                                }
+                                                if (confirm(`Start calling ${pendingCallsList.length} pending numbers?`)) {
+                                                    processCallQueue(pendingCallsList);
+                                                }
+                                            }}
+                                            disabled={progress.isProcessing}
+                                            variant="secondary"
+                                            className="flex items-center gap-2"
+                                        >
+                                            {progress.isProcessing ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Calling {progress.currentCallIndex + 1} of {progress.totalCalls}
+                                                </>
+                                            ) : (
+                                                'Call All Pending'
+                                            )}
+                                        </Button>
+
+                                        <Button
+                                            onClick={() => {
+                                                if (selectedRows.length === 0) {
+                                                    alert('Please select at least one row');
+                                                    return;
+                                                }
+                                                if (confirm(`Start calling ${selectedRows.length} selected numbers?`)) {
+                                                    processCallQueue(selectedRows);
+                                                }
+                                            }}
+                                            disabled={progress.isProcessing || selectedRows.length === 0}
+                                            variant="secondary"
+                                            className="flex items-center gap-2"
+                                        >
+                                            {progress.isProcessing ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Calling {progress.currentCallIndex + 1} of {progress.totalCalls}
+                                                </>
+                                            ) : (
+                                                `Call Selected (${selectedRows.length})`
+                                            )}
+                                        </Button>
+                                    </div>
+
+                                    {/* Error Display */}
+                                    {progress.errors.length > 0 && (
+                                        <Alert variant="destructive">
+                                            <AlertTitle>Errors occurred during batch calling</AlertTitle>
+                                            <AlertDescription>
+                                                <ul className="list-disc pl-4 mt-2">
+                                                    {progress.errors.map((error, index) => (
+                                                        <li key={index}>
+                                                            ID {error.id}: {error.error}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+                                </div>
+                        
+                            {/* DataGrid */}
+                            {callLogsIsLoading ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="text-sm font-medium text-gray-600">
+                                        Loading...
+                                    </div>
+                                </div>
+                            ) : callLogsError ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="text-sm font-medium text-red-600">
+                                        Error: {getErrorMessage(callLogsError)}
+                                    </div>
+                                </div>
+                            ) : (
+                                <DataGrid
+                                    table={table}
+                                    freezeColumns={1}
+                                    onCellEdit={() => {}}
+                                    selectedRows={selectedRows}
+                                    onRowSelect={setSelectedRows}
+                                />
+                            )}
+                        </div>
                         )}
                     </div>
 

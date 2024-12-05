@@ -1,25 +1,53 @@
+// src/components/fragments/data-grid/index.tsx
 import {
   flexRender,
   Table
 } from '@tanstack/react-table';
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
+import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/elements/checkbox';
 
 interface DataGridProps {
   table: Table<any>;
   freezeColumns?: number;
   onCellEdit?: (rowIndex: number, columnId: string, value: any) => void;
+  selectedRows?: number[];
+  onRowSelect?: (selectedRows: number[]) => void;
 }
 
 const DataGrid = ({ 
   table, 
   freezeColumns = 1,
-  onCellEdit
+  onCellEdit,
+  selectedRows = [],
+  onRowSelect
 }: DataGridProps) => {
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number; columnIndex: number } | null>(null);
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnIndex: number } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSelectAll = () => {
+    if (!onRowSelect) return;
+    
+    if (selectedRows.length === table.getRowModel().rows.length) {
+      onRowSelect([]);
+    } else {
+      const allRowIds = table.getRowModel().rows.map(row => row.original.id);
+      onRowSelect(allRowIds);
+    }
+  };
+
+  const handleRowSelect = (rowId: number) => {
+    if (!onRowSelect) return;
+    
+    const newSelectedRows = selectedRows.includes(rowId)
+      ? selectedRows.filter(id => id !== rowId)
+      : [...selectedRows, rowId];
+    
+    onRowSelect(newSelectedRows);
+  };
 
   const handleCellClick = (rowIndex: number, columnIndex: number) => {
     setSelectedCell({ rowIndex, columnIndex });
@@ -37,58 +65,6 @@ const DataGrid = ({
     setEditingCell(null);
   };
 
-  const moveToNextCell = (rowIndex: number, columnIndex: number, direction: 'right' | 'down' | 'up') => {
-    // Save the current cell value before moving
-    if (editingCell) {
-      const currentColumnId = table.getAllColumns()[editingCell.columnIndex].id;
-      handleEditComplete(editingCell.rowIndex, currentColumnId);
-    }
-
-    const rowsCount = table.getRowModel().rows.length;
-    const columnsCount = table.getAllColumns().length;
-
-    let newRowIndex = rowIndex;
-    let newColumnIndex = columnIndex;
-
-    switch (direction) {
-      case 'right':
-        newColumnIndex = (columnIndex + 1) % columnsCount;
-        if (newColumnIndex === 0) newRowIndex = (rowIndex + 1) % rowsCount;
-        break;
-      case 'down':
-        newRowIndex = (rowIndex + 1) % rowsCount;
-        break;
-      case 'up':
-        newRowIndex = (rowIndex - 1 + rowsCount) % rowsCount;
-        break;
-    }
-
-    setSelectedCell({ rowIndex: newRowIndex, columnIndex: newColumnIndex });
-    setEditingCell({ rowIndex: newRowIndex, columnIndex: newColumnIndex });
-    const newCellValue = table.getRowModel().rows[newRowIndex].getAllCells()[newColumnIndex].getValue();
-    setEditValue(String(newCellValue));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, columnIndex: number) => {
-    switch (e.key) {
-      case 'Enter':
-        if (e.shiftKey) {
-          moveToNextCell(rowIndex, columnIndex, 'up');
-        } else {
-          moveToNextCell(rowIndex, columnIndex, 'down');
-        }
-        e.preventDefault();
-        break;
-      case 'Tab':
-        moveToNextCell(rowIndex, columnIndex, 'right');
-        e.preventDefault();
-        break;
-      case 'Escape':
-        setEditingCell(null);
-        break;
-    }
-  };
-
   useEffect(() => {
     if (editingCell && inputRef.current) {
       inputRef.current.focus();
@@ -102,11 +78,26 @@ const DataGrid = ({
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
+              <StyledTh 
+                key="selection"
+                $isSticky={true}
+                $left="0px"
+                $isFirstColumn={true}
+                style={{ width: '40px', minWidth: '40px' }}
+              >
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={selectedRows.length === table.getRowModel().rows.length}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                  />
+                </div>
+              </StyledTh>
               {headerGroup.headers.map((header, index) => (
                 <StyledTh 
                   key={header.id} 
                   $isSticky={index < freezeColumns}
-                  $left={index === 0 ? '0px' : `${64 + (index - 1) * 180}px`}
+                  $left={index === 0 ? '40px' : `${104 + (index - 1) * 180}px`}
                   $isFirstColumn={index === 0}
                 >
                   {flexRender(
@@ -120,12 +111,32 @@ const DataGrid = ({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => (
-            <StyledTr key={row.id}>
+            <StyledTr 
+              key={row.id}
+              className={cn({
+                'bg-muted/50': selectedRows.includes(row.original.id)
+              })}
+            >
+              <StyledTd 
+                $isSticky={true}
+                $left="0px"
+                $isFirstColumn={true}
+                $isSelected={false}
+                style={{ width: '40px', minWidth: '40px' }}
+              >
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={selectedRows.includes(row.original.id)}
+                    onCheckedChange={() => handleRowSelect(row.original.id)}
+                    aria-label={`Select row ${rowIndex + 1}`}
+                  />
+                </div>
+              </StyledTd>
               {row.getVisibleCells().map((cell, columnIndex) => (
                 <StyledTd 
                   key={cell.id} 
                   $isSticky={columnIndex < freezeColumns}
-                  $left={columnIndex === 0 ? '0px' : `${64 + (columnIndex - 1) * 180}px`}
+                  $left={columnIndex === 0 ? '40px' : `${104 + (columnIndex - 1) * 180}px`}
                   $isFirstColumn={columnIndex === 0}
                   $isSelected={selectedCell?.rowIndex === rowIndex && selectedCell?.columnIndex === columnIndex}
                   onClick={() => handleCellClick(rowIndex, columnIndex)}
@@ -137,7 +148,6 @@ const DataGrid = ({
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       onBlur={() => handleEditComplete(rowIndex, cell.column.id)}
-                      onKeyDown={(e) => handleKeyDown(e, rowIndex, columnIndex)}
                     />
                   ) : (
                     flexRender(cell.column.columnDef.cell, cell.getContext())
